@@ -17,9 +17,11 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     Optional<Bookmark> findByUserAndProject(User user, Project project);
 
     @Query("""
-            select b.project from Bookmark b
+            select p from Bookmark b
+            join b.project p
+            join fetch p.user
             where b.user.id = :userId
-            and b.project.deletedAt is null
+            and p.deletedAt is null
             order by b.id desc
             """)
     Page<Project> findProjectsByUserId(@Param("userId") Long userId, Pageable pageable);

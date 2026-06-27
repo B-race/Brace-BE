@@ -62,6 +62,7 @@ public class UserService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<ProjectSummaryResponse> getMyProjects(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return new PageResponse<>(
@@ -70,6 +71,7 @@ public class UserService {
         );
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<ApplicationSummaryResponse> getMyApplications(Long userId, ApplicationStatus status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return new PageResponse<>(
@@ -78,6 +80,7 @@ public class UserService {
         );
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<ProjectSummaryResponse> getMyBookmarks(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return new PageResponse<>(
