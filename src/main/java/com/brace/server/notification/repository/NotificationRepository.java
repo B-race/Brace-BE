@@ -44,4 +44,10 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
               and n.isRead = false
             """)
     int markAllAsReadByUserId(@Param("userId") Long userId);
+
+    void deleteByUser_Id(Long userId);
+
+    void deleteByApplication_User_Id(Long userId);
+
+    void deleteByApplication_Project_User_Id(Long userId);
 }

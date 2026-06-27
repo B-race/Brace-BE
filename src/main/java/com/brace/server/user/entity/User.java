@@ -54,6 +54,7 @@ public class User {
     @Column(name = "participation_type")
     private ParticipationType participationType;
 
+    @Column(name = "introduction", length = 255)
     private String introduction;
 
     @Column(name = "portfolio_url", length = 500)
@@ -61,6 +62,9 @@ public class User {
 
     @Column(name = "github_url", length = 500)
     private String githubUrl;
+
+    @Column(name = "notion_url", length = 500)
+    private String notionUrl;
 
     @Column(name = "extra_url", length = 500)
     private String extraUrl;
@@ -93,6 +97,9 @@ public class User {
             ParticipationType participationType,
             String introduction,
             String portfolioUrl,
+            String githubUrl,
+            String notionUrl,
+            String extraUrl,
             Boolean profileCompleted
     ) {
         this.id = id;
@@ -107,6 +114,9 @@ public class User {
         this.participationType = participationType;
         this.introduction = introduction;
         this.portfolioUrl = portfolioUrl;
+        this.githubUrl = githubUrl;
+        this.notionUrl = notionUrl;
+        this.extraUrl = extraUrl;
         this.profileCompleted = profileCompleted;
     }
 
@@ -128,5 +138,56 @@ public class User {
         this.introduction = introduction;
         this.portfolioUrl = portfolioUrl;
         this.profileCompleted = true;
+    }
+
+    public void updateProfile(
+            String profileImageUrl,
+            String name,
+            String introduction,
+            String role,
+            List<SkillTag> skillTags,
+            String portfolioUrl,
+            String githubUrl,
+            String notionUrl,
+            String extraUrl
+    ) {
+        if (hasText(profileImageUrl)) {
+            this.profileImageUrl = profileImageUrl;
+        }
+        if (hasText(name)) {
+            this.name = name;
+        }
+        if (hasText(introduction)) {
+            this.introduction = introduction;
+        }
+        if (hasText(role)) {
+            this.role = role;
+        }
+        if (skillTags != null) {
+            this.skills.clear();
+            skillTags.stream()
+                    .map(skillTag -> Skill.of(this, skillTag))
+                    .forEach(this.skills::add);
+        }
+        if (hasText(portfolioUrl)) {
+            this.portfolioUrl = portfolioUrl;
+        }
+        if (hasText(githubUrl)) {
+            this.githubUrl = githubUrl;
+        }
+        if (hasText(notionUrl)) {
+            this.notionUrl = notionUrl;
+        }
+        if (hasText(extraUrl)) {
+            this.extraUrl = extraUrl;
+        }
+    }
+
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }

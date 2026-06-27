@@ -43,6 +43,7 @@ public class AuthService {
                 .socialId("")
                 .name(dto.name())
                 .role("")
+                .profileImageUrl("")
                 .participationType(ParticipationType.BOTH)
                 .profileCompleted(false)
                 .build();
@@ -63,7 +64,7 @@ public class AuthService {
 
     @Transactional
     public AuthResDTO.login login(AuthReqDTO.login dto) {
-        User user = userRepository.findByEmail(dto.email())
+        User user = userRepository.findByEmailAndDeletedAtIsNull(dto.email())
                 .orElseThrow(() -> new ProjectException(AuthErrorCode.NOT_FOUND));
 
         if (!passwordEncoder.matches(dto.password(), user.getPassword())) {
