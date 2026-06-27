@@ -8,6 +8,7 @@ public class AuthResDTO {
     public record signUp(
             Long userId,
             String accessToken,
+            String refreshToken,
             String tokenType,
             Boolean profileCompleted
     ) {}
@@ -15,7 +16,13 @@ public class AuthResDTO {
     @Builder
     public record login(
             String accessToken,
+            String refreshToken,
             String tokenType,
             Boolean profileCompleted
+    ) {}
+
+    @Builder
+    public record logout(
+
     ) {}
 }
