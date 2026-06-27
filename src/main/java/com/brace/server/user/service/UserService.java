@@ -12,7 +12,6 @@ import com.brace.server.user.entity.User;
 import com.brace.server.user.exception.code.UserErrorCode;
 import com.brace.server.user.repository.SkillRepository;
 import com.brace.server.user.repository.UserRepository;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -42,7 +41,7 @@ public class UserService {
         user.profileOnboarding(
                 dto.profileImg(),
                 dto.role(),
-                dto.techTags(),
+                dto.skillTags(),
                 dto.participationType(),
                 dto.introduction(),
                 dto.portfolioUrl()
