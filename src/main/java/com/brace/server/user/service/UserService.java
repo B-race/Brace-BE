@@ -12,9 +12,8 @@ import com.brace.server.user.entity.User;
 import com.brace.server.user.exception.code.UserErrorCode;
 import com.brace.server.user.repository.SkillRepository;
 import com.brace.server.user.repository.UserRepository;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,10 +85,34 @@ public class UserService {
                 .skills(userSkillsDTO)
                 .createdAt(user.getCreatedAt())
                 .githubUrl(user.getGithubUrl())
+                .notionUrl(user.getNotionUrl())
                 .extraUrl(user.getExtraUrl())
                 .registeredProjects(registeredProjects)
                 .appliedProjects(appliedProjects)
                 .bookmarkedProjects(bookmarkedProjects)
+                .build();
+    }
+
+    @Transactional
+    public UserResDTO.updateProfile updateProfile(Long userId, UserReqDTO.updateProfile dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ProjectException(AuthErrorCode.NOT_FOUND));
+
+        user.updateProfile(
+                dto.profileImgUrl(),
+                dto.name(),
+                dto.introduction(),
+                dto.role(),
+                dto.skillTags(),
+                dto.portfolioUrl(),
+                dto.githubUrl(),
+                dto.notionUrl(),
+                dto.extraUrl()
+        );
+
+        return UserResDTO.updateProfile.builder()
+                .userId(user.getId())
+                .profileCompleted(user.getProfileCompleted())
                 .build();
     }
 }

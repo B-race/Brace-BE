@@ -36,4 +36,13 @@ public class UserController {
         BaseSuccessCode code = UserSuccessCode.MYPAGE_OK;
         return ApiResponse.success(code, userService.myPage(userDetails.getUserId()));
     }
+
+    @PatchMapping("/users/me")
+    public ApiResponse<UserResDTO.updateProfile> updateProfile(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody UserReqDTO.updateProfile dto
+    ) {
+        BaseSuccessCode code = UserSuccessCode.UPDATE_PROFILE_OK;
+        return ApiResponse.success(code, userService.updateProfile(userDetails.getUserId(), dto));
+    }
 }

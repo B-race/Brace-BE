@@ -30,6 +30,7 @@ public class UserResDTO {
             String email,
             LocalDateTime createdAt,
             String githubUrl,
+            String notionUrl,
             String extraUrl
     ) {}
 
@@ -37,5 +38,11 @@ public class UserResDTO {
     public record myPageSkill(
             Long skillId,
             SkillTag skillTag
+    ) {}
+
+    @Builder
+    public record updateProfile(
+            Long userId,
+            Boolean profileCompleted
     ) {}
 }

@@ -33,18 +33,6 @@ public class GlobalExceptionAdvice {
                 .body(new ApiResponse<>(false, errorCode.getErrorCode(), message, null));
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<String>> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        BaseErrorCode errorCode = GeneralErrorCode.BAD_REQUEST;
-        String message = e.getBindingResult().getFieldErrors().stream()
-                .findFirst()
-                .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
-                .orElse(errorCode.getMessage());
-
-        return ResponseEntity.status(errorCode.getHttpStatus())
-                .body(new ApiResponse<>(false, errorCode.getErrorCode(), message, null));
-    }
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<String>> handleGeneralException(Exception e) {
         BaseErrorCode errorCode = GeneralErrorCode.INTERNAL_SERVER_ERROR;
