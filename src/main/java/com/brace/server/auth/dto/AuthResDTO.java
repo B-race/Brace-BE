@@ -25,4 +25,11 @@ public class AuthResDTO {
     public record logout(
 
     ) {}
+
+    @Builder
+    public record reissue(
+            String accessToken,
+            String refreshToken,
+            String tokenType
+    ) {}
 }

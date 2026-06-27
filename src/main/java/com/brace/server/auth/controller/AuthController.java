@@ -35,6 +35,14 @@ public class AuthController {
         return ApiResponse.success(code, authService.login(dto));
     }
 
+    @PostMapping("/auth/reissue")
+    public ApiResponse<AuthResDTO.reissue> reissue(
+            @Valid @RequestBody AuthReqDTO.reissue dto
+    ) {
+        BaseSuccessCode code = AuthSuccessCode.SUCCESS_REISSUE;
+        return ApiResponse.success(code, authService.reissue(dto));
+    }
+
     @PostMapping("/auth/logout")
     public ApiResponse<Void> logout(
             @AuthenticationPrincipal CustomUserDetails userDetails,

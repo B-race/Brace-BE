@@ -32,4 +32,9 @@ public class AuthReqDTO {
     public record logout(
             String refreshToken
     ) {}
+
+    public record reissue(
+            @NotBlank
+            String refreshToken
+    ) {}
 }
