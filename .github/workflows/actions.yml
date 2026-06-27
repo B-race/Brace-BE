@@ -50,14 +50,36 @@ jobs:
           platforms: linux/amd64
           tags: |
             ${{ env.IMAGE }}:${{ env.IMAGE_TAG }}
-            ${{ env.IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max,ignore-error=true
 
       - name: Deploy to EC2 via SSM
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PW: ${{ secrets.DB_PW }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+          NAVER_REDIRECT_URI: ${{ secrets.NAVER_REDIRECT_URI }}
         run: |
+          for name in DB_URL DB_USER DB_PW; do
+            if [ -z "${!name}" ]; then
+              echo "$name secret is required."
+              exit 1
+            fi
+          done
+
+          DB_URL_B64=$(printf '%s' "$DB_URL" | base64 -w 0)
+          DB_USER_B64=$(printf '%s' "$DB_USER" | base64 -w 0)
+          DB_PW_B64=$(printf '%s' "$DB_PW" | base64 -w 0)
+          GOOGLE_CLIENT_ID_B64=$(printf '%s' "$GOOGLE_CLIENT_ID" | base64 -w 0)
+          NAVER_CLIENT_ID_B64=$(printf '%s' "$NAVER_CLIENT_ID" | base64 -w 0)
+          NAVER_CLIENT_SECRET_B64=$(printf '%s' "$NAVER_CLIENT_SECRET" | base64 -w 0)
+          NAVER_REDIRECT_URI_B64=$(printf '%s' "$NAVER_REDIRECT_URI" | base64 -w 0)
+
           aws ssm send-command \
             --document-name "AWS-RunShellScript" \
             --targets "Key=tag:app,Values=brace" \
-            --parameters 'commands=["/home/ec2-user/deploy.sh"]' \
+            --parameters "commands=[\"DB_URL_B64=$DB_URL_B64 DB_USER_B64=$DB_USER_B64 DB_PW_B64=$DB_PW_B64 GOOGLE_CLIENT_ID_B64=$GOOGLE_CLIENT_ID_B64 NAVER_CLIENT_ID_B64=$NAVER_CLIENT_ID_B64 NAVER_CLIENT_SECRET_B64=$NAVER_CLIENT_SECRET_B64 NAVER_REDIRECT_URI_B64=$NAVER_REDIRECT_URI_B64 /home/ec2-user/deploy.sh ${IMAGE_TAG}\"]" \
             --region ap-northeast-2
