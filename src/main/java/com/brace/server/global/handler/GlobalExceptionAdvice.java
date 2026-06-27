@@ -33,15 +33,6 @@ public class GlobalExceptionAdvice {
                 .body(new ApiResponse<>(false, errorCode.getErrorCode(), message, null));
     }
 
-    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiResponse<String>> handleTypeMismatchException(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException e) {
-        BaseErrorCode errorCode = GeneralErrorCode.BAD_REQUEST;
-        String message = "올바르지 않은 파라미터 값입니다: " + e.getValue();
-        return ResponseEntity.status(errorCode.getHttpStatus())
-                .body(new ApiResponse<>(false, errorCode.getErrorCode(), message, null));
-    }
-
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<String>> handleGeneralException(Exception e) {
         BaseErrorCode errorCode = GeneralErrorCode.INTERNAL_SERVER_ERROR;
