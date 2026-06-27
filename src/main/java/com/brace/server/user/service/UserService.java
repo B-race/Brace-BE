@@ -124,6 +124,7 @@ public class UserService {
                 .userId(userId)
                 .name(user.getName())
                 .role(user.getRole())
+                .profileImageUrl(user.getProfileImageUrl())
                 .introduction(user.getIntroduction())
                 .email(user.getEmail())
                 .skills(userSkillsDTO)

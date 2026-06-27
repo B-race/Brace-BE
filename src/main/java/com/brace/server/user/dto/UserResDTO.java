@@ -22,6 +22,7 @@ public class UserResDTO {
             Long userId,
             String name,
             String role,
+            String profileImageUrl,
             List<myPageSkill> skills,
             String introduction,
             Integer registeredProjects,
