@@ -183,6 +183,10 @@ public class User {
         }
     }
 
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
     }

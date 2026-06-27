@@ -5,6 +5,7 @@ import com.brace.server.application.entity.Application;
 import com.brace.server.application.entity.ApplicationStatus;
 import com.brace.server.application.repository.ApplicationRepository;
 import com.brace.server.auth.exception.code.AuthErrorCode;
+import com.brace.server.auth.repository.RefreshTokenRepository;
 import com.brace.server.global.exception.ProjectException;
 import com.brace.server.project.converter.ProjectConverter;
 import com.brace.server.project.dto.response.PageResponse;
@@ -35,10 +36,11 @@ public class UserService {
     private final ProjectRepository projectRepository;
     private final ApplicationRepository applicationRepository;
     private final BookmarkRepository bookmarkRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Transactional
     public UserResDTO.profileOnboarding profileOnboarding(Long userId, UserReqDTO.profileOnboarding dto) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(() -> new ProjectException(AuthErrorCode.NOT_FOUND));
 
         if (Boolean.TRUE.equals(user.getProfileCompleted())) {
@@ -99,7 +101,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserResDTO.myPage myPage(Long userId) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(() -> new ProjectException(AuthErrorCode.NOT_FOUND));
 
         List<Skill> userSkills = skillRepository.findByUserId(userId);
@@ -134,7 +136,7 @@ public class UserService {
 
     @Transactional
     public UserResDTO.updateProfile updateProfile(Long userId, UserReqDTO.updateProfile dto) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(() -> new ProjectException(AuthErrorCode.NOT_FOUND));
 
         user.updateProfile(
@@ -153,5 +155,14 @@ public class UserService {
                 .userId(user.getId())
                 .profileCompleted(user.getProfileCompleted())
                 .build();
+    }
+
+    @Transactional
+    public void deleteUser(Long userId) {
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+                .orElseThrow(() -> new ProjectException(AuthErrorCode.NOT_FOUND));
+
+        refreshTokenRepository.deleteByUserId(userId);
+        user.softDelete();
     }
 }

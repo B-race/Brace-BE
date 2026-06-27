@@ -18,6 +18,9 @@ public interface ProjectRepository extends JpaRepository<Project, Long>, JpaSpec
     Integer countByUser_Id(Long userId);
 
 
+    void deleteByUser_Id(Long userId);
+
+
     @Query("""
             select p
             from Project p

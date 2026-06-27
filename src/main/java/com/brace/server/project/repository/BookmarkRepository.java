@@ -25,4 +25,8 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     Page<Project> findProjectsByUserId(@Param("userId") Long userId, Pageable pageable);
 
     Integer countByUser_Id(Long userId);
+
+    void deleteByUser_Id(Long userId);
+
+    void deleteByProject_User_Id(Long userId);
 }
