@@ -9,17 +9,31 @@ ACCOUNT_ID=813875215068
 REPOSITORY=brace-mesh
 IMAGE_TAG="${1:?image tag is required}"
 
-decode_env() {
-  printf '%s' "$1" | base64 -d
+get_required_parameter() {
+  aws ssm get-parameter \
+    --name "$1" \
+    --with-decryption \
+    --query 'Parameter.Value' \
+    --output text \
+    --region "$AWS_REGION"
 }
 
-DB_URL="$(decode_env "${DB_URL_B64:?DB_URL_B64 is required}")"
-DB_USER="$(decode_env "${DB_USER_B64:?DB_USER_B64 is required}")"
-DB_PW="$(decode_env "${DB_PW_B64:?DB_PW_B64 is required}")"
-GOOGLE_CLIENT_ID="$(decode_env "${GOOGLE_CLIENT_ID_B64:-}")"
-NAVER_CLIENT_ID="$(decode_env "${NAVER_CLIENT_ID_B64:-}")"
-NAVER_CLIENT_SECRET="$(decode_env "${NAVER_CLIENT_SECRET_B64:-}")"
-NAVER_REDIRECT_URI="$(decode_env "${NAVER_REDIRECT_URI_B64:-}")"
+get_optional_parameter() {
+  aws ssm get-parameter \
+    --name "$1" \
+    --with-decryption \
+    --query 'Parameter.Value' \
+    --output text \
+    --region "$AWS_REGION" 2>/dev/null || true
+}
+
+DB_URL="$(get_required_parameter /brace/prod/DB_URL)"
+DB_USER="$(get_required_parameter /brace/prod/DB_USER)"
+DB_PW="$(get_required_parameter /brace/prod/DB_PW)"
+GOOGLE_CLIENT_ID="$(get_optional_parameter /brace/prod/GOOGLE_CLIENT_ID)"
+NAVER_CLIENT_ID="$(get_optional_parameter /brace/prod/NAVER_CLIENT_ID)"
+NAVER_CLIENT_SECRET="$(get_optional_parameter /brace/prod/NAVER_CLIENT_SECRET)"
+NAVER_REDIRECT_URI="$(get_optional_parameter /brace/prod/NAVER_REDIRECT_URI)"
 
 IMAGE=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$REPOSITORY:$IMAGE_TAG
 
