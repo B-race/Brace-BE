@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.UUID;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +17,8 @@ public class JwtTokenProvider {
     private static final String HMAC_ALGORITHM = "HmacSHA256";
     private static final Base64.Encoder BASE64_URL_ENCODER = Base64.getUrlEncoder().withoutPadding();
     private static final Base64.Decoder BASE64_URL_DECODER = Base64.getUrlDecoder();
+    private static final String ACCESS_TOKEN_TYPE = "ACCESS";
+    private static final String REFRESH_TOKEN_TYPE = "REFRESH";
 
     private final String secret;
     private final long accessTokenExpirationMillis;
@@ -32,42 +35,59 @@ public class JwtTokenProvider {
     }
 
     public String createAccessToken(Long userId, String email, String role) {
-        return createToken(userId, email, role, accessTokenExpirationMillis);
+        return createToken(userId, email, role, accessTokenExpirationMillis, ACCESS_TOKEN_TYPE);
     }
 
     public String createRefreshToken(Long userId, String email, String role) {
-        return createToken(userId, email, role, refreshTokenExpirationMillis);
+        return createToken(userId, email, role, refreshTokenExpirationMillis, REFRESH_TOKEN_TYPE);
     }
 
     public long getRefreshTokenExpirationMillis() {
         return refreshTokenExpirationMillis;
     }
 
-    private String createToken(Long userId, String email, String role, long expirationMillis) {
+    private String createToken(Long userId, String email, String role, long expirationMillis, String tokenType) {
         long now = Instant.now().toEpochMilli();
         long expiresAt = now + expirationMillis;
 
         String header = encode("{\"alg\":\"HS256\",\"typ\":\"JWT\"}");
         String payload = encode("""
-                {"sub":%s,"email":"%s","role":"%s","iat":%d,"exp":%d}
-                """.formatted(userId, escape(email), escape(role), now / 1000, expiresAt / 1000).trim());
+                {"sub":"%s","email":"%s","role":"%s","tokenType":"%s","jti":"%s","iat":%d,"exp":%d}
+                """.formatted(userId, escape(email), escape(role), tokenType, UUID.randomUUID(), now / 1000, expiresAt / 1000).trim());
         String unsignedToken = header + "." + payload;
 
         return unsignedToken + "." + sign(unsignedToken);
     }
 
+    public Long getUserIdFromAccessToken(String token) {
+        return getUserId(token, ACCESS_TOKEN_TYPE);
+    }
+
+    public Long getUserIdFromRefreshToken(String token) {
+        return getUserId(token, REFRESH_TOKEN_TYPE);
+    }
+
     public Long getUserId(String token) {
-        validateToken(token);
+        return getUserId(token, null);
+    }
+
+    private Long getUserId(String token, String expectedTokenType) {
+        validateToken(token, expectedTokenType);
 
         try {
             String payload = decodePayload(token);
-            return extractLongClaim(payload, "sub");
+            String subject = extractStringClaim(payload, "sub");
+            return Long.valueOf(subject);
         } catch (Exception e) {
             throw new ProjectException(AuthErrorCode.INVALID_TOKEN);
         }
     }
 
     public boolean validateToken(String token) {
+        return validateToken(token, null);
+    }
+
+    private boolean validateToken(String token, String expectedTokenType) {
         try {
             String[] parts = token.split("\\.");
             if (parts.length != 3) {
@@ -83,6 +103,13 @@ public class JwtTokenProvider {
             long expiresAt = extractLongClaim(decode(parts[1]), "exp");
             if (Instant.now().getEpochSecond() >= expiresAt) {
                 throw new ProjectException(AuthErrorCode.INVALID_TOKEN);
+            }
+
+            if (expectedTokenType != null) {
+                String tokenType = extractStringClaim(decode(parts[1]), "tokenType");
+                if (!expectedTokenType.equals(tokenType)) {
+                    throw new ProjectException(AuthErrorCode.INVALID_TOKEN);
+                }
             }
 
             return true;

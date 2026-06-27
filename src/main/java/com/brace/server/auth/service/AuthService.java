@@ -93,6 +93,34 @@ public class AuthService {
         refreshTokenRepository.deleteByUserIdAndTokenHash(userId, hashToken(dto.refreshToken()));
     }
 
+    @Transactional
+    public AuthResDTO.reissue reissue(AuthReqDTO.reissue dto) {
+        Long userId = jwtTokenProvider.getUserIdFromRefreshToken(dto.refreshToken());
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+                .orElseThrow(() -> new ProjectException(AuthErrorCode.NOT_FOUND));
+
+        String tokenHash = hashToken(dto.refreshToken());
+        RefreshToken storedRefreshToken = refreshTokenRepository.findByUserIdAndTokenHash(userId, tokenHash)
+                .orElseThrow(() -> new ProjectException(AuthErrorCode.INVALID_TOKEN));
+
+        if (storedRefreshToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            refreshTokenRepository.delete(storedRefreshToken);
+            throw new ProjectException(AuthErrorCode.INVALID_TOKEN);
+        }
+
+        refreshTokenRepository.delete(storedRefreshToken);
+
+        String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail(), user.getRole());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId(), user.getEmail(), user.getRole());
+        saveRefreshToken(user, refreshToken);
+
+        return AuthResDTO.reissue.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .build();
+    }
+
     private void saveRefreshToken(User user, String refreshToken) {
         RefreshToken token = RefreshToken.builder()
                 .user(user)

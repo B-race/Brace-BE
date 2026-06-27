@@ -17,6 +17,10 @@ public enum AuthSuccessCode implements BaseSuccessCode {
             "AUTH200_1",
             "로그인에 성공했습니다."),
 
+    SUCCESS_REISSUE(HttpStatus.OK,
+            "AUTH200_2",
+            "토큰 재발급에 성공했습니다."),
+
     SUCCESS_LOGOUT(HttpStatus.OK,
             "AUTH200_4",
             "로그아웃에 성공했습니다."),;
