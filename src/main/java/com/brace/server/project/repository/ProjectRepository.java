@@ -14,6 +14,10 @@ public interface ProjectRepository extends JpaRepository<Project, Long>, JpaSpec
     Optional<Project> findByIdAndDeletedAtIsNull(Long id);
 
     Page<Project> findByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(Long userId, Pageable pageable);
+
+    Integer countByUser_Id(Long userId);
+
+
     @Query("""
             select p
             from Project p

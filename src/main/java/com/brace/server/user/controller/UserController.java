@@ -67,4 +67,21 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(
                 userService.getMyBookmarks(userDetails.getUserId(), page, size)));
     }
+
+    @GetMapping("/me")
+    public ApiResponse<UserResDTO.myPage> myPage(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        BaseSuccessCode code = UserSuccessCode.MYPAGE_OK;
+        return ApiResponse.success(code, userService.myPage(userDetails.getUserId()));
+    }
+
+    @PatchMapping("/me")
+    public ApiResponse<UserResDTO.updateProfile> updateProfile(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody UserReqDTO.updateProfile dto
+    ) {
+        BaseSuccessCode code = UserSuccessCode.UPDATE_PROFILE_OK;
+        return ApiResponse.success(code, userService.updateProfile(userDetails.getUserId(), dto));
+    }
 }

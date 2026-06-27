@@ -41,6 +41,7 @@ public class GlobalExceptionAdvice {
                 .body(new ApiResponse<>(false, errorCode.getErrorCode(), message, null));
     }
 
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<String>> handleGeneralException(Exception e) {
         BaseErrorCode errorCode = GeneralErrorCode.INTERNAL_SERVER_ERROR;

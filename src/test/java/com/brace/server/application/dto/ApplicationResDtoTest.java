@@ -6,14 +6,12 @@ import com.brace.server.project.entity.ActivityType;
 import com.brace.server.project.entity.MeetingType;
 import com.brace.server.project.entity.Project;
 import com.brace.server.project.entity.ProjectStatus;
-import com.brace.server.user.entity.ParticipationType;
-import com.brace.server.user.entity.Role;
-import com.brace.server.user.entity.SocialProvider;
-import com.brace.server.user.entity.User;
+import com.brace.server.user.entity.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -61,11 +59,12 @@ class ApplicationResDtoTest {
         assertThat(summary.applicant().userId()).isEqualTo(2L);
         assertThat(summary.applicant().roleId()).isEqualTo(10L);
         assertThat(summary.applicant().roleName()).isEqualTo("backend");
+        assertThat(summary.applicant().list()).containsExactly(SkillTag.JAVA, SkillTag.SPRING);
         assertThat(summary.applicant().message()).isEqualTo("지원합니다.");
     }
 
     private User user(Long id) {
-        return User.builder()
+        User user = User.builder()
                 .id(id)
                 .email("user" + id + "@example.com")
                 .password("password")
@@ -74,10 +73,19 @@ class ApplicationResDtoTest {
                 .name("user" + id)
                 .role("개발자")
                 .profileImageUrl("https://example.com/" + id + ".png")
-                .techTags("java,spring")
                 .participationType(ParticipationType.BOTH)
                 .introduction("소개")
                 .portfolioUrl("https://example.com/portfolio/" + id)
+                .profileCompleted(true)
                 .build();
+        user.profileOnboarding(
+                "https://example.com/" + id + ".png",
+                "개발자",
+                List.of(SkillTag.JAVA, SkillTag.SPRING),
+                ParticipationType.BOTH,
+                "소개",
+                "https://example.com/portfolio/" + id
+        );
+        return user;
     }
 }

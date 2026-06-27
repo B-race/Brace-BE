@@ -3,10 +3,7 @@ package com.brace.server.project.repository;
 import com.brace.server.TestcontainersConfiguration;
 import com.brace.server.global.config.JpaAuditingConfig;
 import com.brace.server.project.entity.*;
-import com.brace.server.user.entity.ParticipationType;
-import com.brace.server.user.entity.Role;
-import com.brace.server.user.entity.SocialProvider;
-import com.brace.server.user.entity.User;
+import com.brace.server.user.entity.*;
 import com.brace.server.user.repository.RoleRepository;
 import com.brace.server.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;
@@ -18,6 +15,7 @@ import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabas
 import org.springframework.context.annotation.Import;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -127,8 +125,7 @@ class ProjectRoleRepositoryTest {
     }
 
     private ProjectFixture saveProjectFixture(Integer recruitCount) {
-        User owner = userRepository.save(User.builder()
-                .id(1L)
+        User owner = User.builder()
                 .email("owner@example.com")
                 .password("password")
                 .socialProvider(SocialProvider.NONE)
@@ -136,14 +133,22 @@ class ProjectRoleRepositoryTest {
                 .name("owner")
                 .role("개발자")
                 .profileImageUrl("https://example.com/owner.png")
-                .techTags("java,spring")
                 .participationType(ParticipationType.BOTH)
                 .introduction("소개")
                 .portfolioUrl("https://example.com/portfolio")
-                .build());
+                .profileCompleted(true)
+                .build();
+        owner.profileOnboarding(
+                "https://example.com/owner.png",
+                "개발자",
+                List.of(SkillTag.JAVA, SkillTag.SPRING),
+                ParticipationType.BOTH,
+                "소개",
+                "https://example.com/portfolio"
+        );
+        owner = userRepository.save(owner);
         Role role = roleRepository.save(Role.builder().id(10L).name("backend").build());
         Project project = projectRepository.save(Project.builder()
-                .id(1L)
                 .activityType(ActivityType.PERSONAL_PROJECT)
                 .title("프로젝트")
                 .description("설명")
@@ -158,7 +163,6 @@ class ProjectRoleRepositoryTest {
                 .user(owner)
                 .build());
         ProjectRole projectRole = projectRoleRepository.save(ProjectRole.builder()
-                .id(10L)
                 .project(project)
                 .role(role)
                 .recruitCount(recruitCount)
