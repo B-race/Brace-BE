@@ -1,18 +1,24 @@
 package com.brace.server.project.entity;
 
 import com.brace.server.user.entity.User;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,6 +35,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 public class Project {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Enumerated(EnumType.STRING)
@@ -67,6 +74,9 @@ public class Project {
     @Column(nullable = false)
     private ProjectStatus status;
 
+    @Column(name = "view_count", nullable = false)
+    private Integer viewCount = 0;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -81,6 +91,9 @@ public class Project {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProjectRole> projectRoles = new ArrayList<>();
 
     @Builder
     public Project(
@@ -111,5 +124,37 @@ public class Project {
         this.tags = tags;
         this.status = status;
         this.user = user;
+    }
+
+    public void update(
+            ActivityType activityType,
+            String title,
+            String description,
+            String projectName,
+            String projectUrl,
+            LocalDate startDate,
+            LocalDate endDate,
+            LocalDate deadline,
+            MeetingType meetingType,
+            String tags
+    ) {
+        if (activityType != null) this.activityType = activityType;
+        if (title != null) this.title = title;
+        if (description != null) this.description = description;
+        if (projectName != null) this.projectName = projectName;
+        if (projectUrl != null) this.projectUrl = projectUrl;
+        if (startDate != null) this.startDate = startDate;
+        if (endDate != null) this.endDate = endDate;
+        if (deadline != null) this.deadline = deadline;
+        if (meetingType != null) this.meetingType = meetingType;
+        if (tags != null) this.tags = tags;
+    }
+
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public void incrementViewCount() {
+        this.viewCount = (this.viewCount == null) ? 1 : (this.viewCount + 1);
     }
 }

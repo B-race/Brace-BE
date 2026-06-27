@@ -67,4 +67,11 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
             @Param("status") ApplicationStatus status,
             @Param("excludedApplicationId") Long excludedApplicationId
     );
+
+
+    @Query("SELECT a.role.id, COUNT(a) FROM Application a WHERE a.project.id = :projectId " +
+            "AND a.status = :status GROUP BY a.role.id")
+    List<Object[]> countByProjectIdAndStatusGroupByRole(
+            @Param("projectId") Long projectId,
+            @Param("status") ApplicationStatus status);
 }

@@ -1,6 +1,8 @@
 package com.brace.server.project.repository;
 
+import com.brace.server.project.entity.Project;
 import com.brace.server.project.entity.ProjectRole;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -38,4 +40,8 @@ public interface ProjectRoleRepository extends JpaRepository<ProjectRole, Long> 
     );
 
     boolean existsByProjectIdAndRoleIdAndRecruitCount(Long projectId, Long roleId, Integer recruitCount);
+
+    List<ProjectRole> findByProject(Project project);
+
+    void deleteByProject(Project project);
 }
