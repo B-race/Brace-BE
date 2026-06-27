@@ -22,6 +22,10 @@ public class ApiResponse<T> {
     @JsonProperty("result")
     private final T result;
 
+    public static <T> ApiResponse<T> success(T result) {
+        return new ApiResponse<>(true, null, "성공적으로 요청을 처리했습니다.", result);
+    }
+
     public static <T> ApiResponse<T> success(BaseErrorCode errorCode, T result) {
         return new ApiResponse<>(true, errorCode.getErrorCode(), errorCode.getMessage(), result);
     }
