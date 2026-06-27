@@ -18,6 +18,10 @@ public enum UserSuccessCode implements BaseSuccessCode {
     MYPAGE_OK(HttpStatus.OK,
             "USER200_1",
             "마이페이지 조회에 성공했습니다."),
+
+    UPDATE_PROFILE_OK(HttpStatus.OK,
+            "USER200_1",
+            "개인 정보 수정에 성공했습니다.")
     ;
 
     private final HttpStatus httpStatus;
