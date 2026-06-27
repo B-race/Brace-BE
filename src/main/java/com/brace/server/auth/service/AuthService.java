@@ -5,6 +5,8 @@ import com.brace.server.auth.dto.AuthResDTO;
 import com.brace.server.auth.entity.RefreshToken;
 import com.brace.server.auth.exception.code.AuthErrorCode;
 import com.brace.server.auth.jwt.JwtTokenProvider;
+import com.brace.server.auth.oauth.GoogleTokenVerifier;
+import com.brace.server.auth.oauth.GoogleUserInfo;
 import com.brace.server.auth.repository.RefreshTokenRepository;
 import com.brace.server.global.exception.ProjectException;
 import com.brace.server.user.entity.ParticipationType;
@@ -29,6 +31,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final GoogleTokenVerifier googleTokenVerifier;
 
     @Transactional
     public AuthResDTO.signUp signUp(AuthReqDTO.signUp dto) {
@@ -119,6 +122,49 @@ public class AuthService {
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
                 .build();
+    }
+
+    @Transactional
+    public AuthResDTO.googleLogin googleLogin(AuthReqDTO.googleLogin dto) {
+        GoogleUserInfo googleUserInfo = googleTokenVerifier.verify(dto.idToken());
+        User user = userRepository.findBySocialProviderAndSocialIdAndDeletedAtIsNull(
+                        SocialProvider.GOOGLE,
+                        googleUserInfo.socialId()
+                )
+                .orElseGet(() -> createGoogleUser(googleUserInfo));
+
+        String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail(), user.getRole());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId(), user.getEmail(), user.getRole());
+        saveRefreshToken(user, refreshToken);
+
+        return AuthResDTO.googleLogin.builder()
+                .userId(user.getId())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .profileCompleted(user.getProfileCompleted())
+                .build();
+    }
+
+    private User createGoogleUser(GoogleUserInfo googleUserInfo) {
+        userRepository.findByEmailAndDeletedAtIsNull(googleUserInfo.email())
+                .ifPresent(user -> {
+                    throw new ProjectException(AuthErrorCode.ALREADY_EXISTS_EMAIL);
+                });
+
+        User user = User.builder()
+                .email(googleUserInfo.email())
+                .password(passwordEncoder.encode("GOOGLE:" + googleUserInfo.socialId()))
+                .socialProvider(SocialProvider.GOOGLE)
+                .socialId(googleUserInfo.socialId())
+                .name(googleUserInfo.name().isBlank() ? googleUserInfo.email() : googleUserInfo.name())
+                .role("")
+                .profileImageUrl(googleUserInfo.profileImageUrl())
+                .participationType(ParticipationType.BOTH)
+                .profileCompleted(false)
+                .build();
+
+        return userRepository.save(user);
     }
 
     private void saveRefreshToken(User user, String refreshToken) {
