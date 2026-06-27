@@ -41,4 +41,13 @@ public class AuthResDTO {
             String tokenType,
             Boolean profileCompleted
     ) {}
+
+    @Builder
+    public record naverLogin(
+            Long userId,
+            String accessToken,
+            String refreshToken,
+            String tokenType,
+            Boolean profileCompleted
+    ) {}
 }

@@ -42,4 +42,12 @@ public class AuthReqDTO {
             @NotBlank
             String idToken
     ) {}
+
+    public record naverLogin(
+            @NotBlank
+            String code,
+
+            @NotBlank
+            String state
+    ) {}
 }

@@ -43,6 +43,14 @@ public class AuthController {
         return ApiResponse.success(code, authService.googleLogin(dto));
     }
 
+    @PostMapping("/auth/naver/login")
+    public ApiResponse<AuthResDTO.naverLogin> naverLogin(
+            @Valid @RequestBody AuthReqDTO.naverLogin dto
+    ) {
+        BaseSuccessCode code = AuthSuccessCode.SUCCESS_NAVER_LOGIN;
+        return ApiResponse.success(code, authService.naverLogin(dto));
+    }
+
     @PostMapping("/auth/reissue")
     public ApiResponse<AuthResDTO.reissue> reissue(
             @Valid @RequestBody AuthReqDTO.reissue dto

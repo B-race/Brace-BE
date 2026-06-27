@@ -6,6 +6,8 @@ import com.brace.server.auth.exception.code.AuthErrorCode;
 import com.brace.server.auth.jwt.JwtTokenProvider;
 import com.brace.server.auth.oauth.GoogleTokenVerifier;
 import com.brace.server.auth.oauth.GoogleUserInfo;
+import com.brace.server.auth.oauth.NaverOAuthClient;
+import com.brace.server.auth.oauth.NaverUserInfo;
 import com.brace.server.auth.repository.RefreshTokenRepository;
 import com.brace.server.global.exception.ProjectException;
 import com.brace.server.user.entity.ParticipationType;
@@ -43,6 +45,9 @@ class AuthServiceTest {
 
     @Mock
     private GoogleTokenVerifier googleTokenVerifier;
+
+    @Mock
+    private NaverOAuthClient naverOAuthClient;
 
     @Spy
     private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -157,6 +162,44 @@ class AuthServiceTest {
         verify(refreshTokenRepository, never()).save(any());
     }
 
+    @Test
+    @DisplayName("naver login creates user and issues service tokens")
+    void naverLoginCreatesUserAndIssuesServiceTokens() {
+        NaverUserInfo naverUserInfo = new NaverUserInfo(
+                "naver-id-1",
+                "naver@example.com",
+                "Naver User",
+                "https://example.com/naver-profile.png"
+        );
+        User savedUser = naverUser(1L, naverUserInfo);
+
+        when(naverOAuthClient.getUserInfo("code", "state")).thenReturn(naverUserInfo);
+        when(userRepository.findBySocialProviderAndSocialIdAndDeletedAtIsNull(SocialProvider.NAVER, "naver-id-1"))
+                .thenReturn(Optional.empty());
+        when(userRepository.findByEmailAndDeletedAtIsNull("naver@example.com")).thenReturn(Optional.empty());
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+
+        AuthResDTO.naverLogin response = authService.naverLogin(new AuthReqDTO.naverLogin("code", "state"));
+
+        assertThat(response.userId()).isEqualTo(1L);
+        assertThat(response.accessToken()).isNotBlank();
+        assertThat(response.refreshToken()).isNotBlank();
+        assertThat(response.tokenType()).isEqualTo("Bearer");
+        assertThat(response.profileCompleted()).isFalse();
+        verify(refreshTokenRepository).save(any());
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        User newUser = userCaptor.getValue();
+        assertThat(newUser.getEmail()).isEqualTo("naver@example.com");
+        assertThat(newUser.getSocialProvider()).isEqualTo(SocialProvider.NAVER);
+        assertThat(newUser.getSocialId()).isEqualTo("naver-id-1");
+        assertThat(newUser.getName()).isEqualTo("Naver User");
+        assertThat(newUser.getProfileImageUrl()).isEqualTo("https://example.com/naver-profile.png");
+        assertThat(newUser.getParticipationType()).isEqualTo(ParticipationType.BOTH);
+        assertThat(newUser.getProfileCompleted()).isFalse();
+    }
+
     private User googleUser(Long id, GoogleUserInfo googleUserInfo) {
         return User.builder()
                 .id(id)
@@ -167,6 +210,21 @@ class AuthServiceTest {
                 .name(googleUserInfo.name())
                 .role("")
                 .profileImageUrl(googleUserInfo.profileImageUrl())
+                .participationType(ParticipationType.BOTH)
+                .profileCompleted(false)
+                .build();
+    }
+
+    private User naverUser(Long id, NaverUserInfo naverUserInfo) {
+        return User.builder()
+                .id(id)
+                .email(naverUserInfo.email())
+                .password("encoded-password")
+                .socialProvider(SocialProvider.NAVER)
+                .socialId(naverUserInfo.socialId())
+                .name(naverUserInfo.name())
+                .role("")
+                .profileImageUrl(naverUserInfo.profileImageUrl())
                 .participationType(ParticipationType.BOTH)
                 .profileCompleted(false)
                 .build();
