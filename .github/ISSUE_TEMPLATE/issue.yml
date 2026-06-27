@@ -1,7 +1,24 @@
-## 📌 이슈 내용
--
+name: Issue
+description: 작업 이슈 생성
+title: "[feat] "
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: 📌 이슈 내용
+      placeholder: 작업 내용을 작성해주세요.
+      value: |
+        -
+    validations:
+      required: true
 
-## ✅ 작업 목록
-- [ ]
-- [ ]
-- [ ]
+  - type: textarea
+    id: tasks
+    attributes:
+      label: ✅ 작업 목록
+      value: |
+        - [ ]
+        - [ ]
+        - [ ]
+    validations:
+      required: true
