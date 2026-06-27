@@ -1,13 +1,11 @@
 package com.brace.server.user.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,9 +22,10 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 public class User {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
@@ -36,7 +35,7 @@ public class User {
     @Column(name = "social_provider", nullable = false)
     private SocialProvider socialProvider;
 
-    @Column(name = "social_id", nullable = false)
+    @Column(name = "social_id")
     private String socialId;
 
     @Column(nullable = false, length = 100)
@@ -45,20 +44,23 @@ public class User {
     @Column(nullable = false, length = 100)
     private String role;
 
-    @Column(name = "profile_image_url", nullable = false, length = 500)
+    @Column(name = "profile_image_url", length = 500)
     private String profileImageUrl;
 
-    @Column(name = "tech_tags", nullable = false, length = 500)
-    private String techTags;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Skill> skills = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "participation_type", nullable = false)
+    @Column(name = "participation_type")
     private ParticipationType participationType;
 
     private String introduction;
 
     @Column(name = "portfolio_url", length = 500)
     private String portfolioUrl;
+
+    @Column(name = "profile_completed", nullable = false)
+    private Boolean profileCompleted;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -81,10 +83,11 @@ public class User {
             String name,
             String role,
             String profileImageUrl,
-            String techTags,
+            List<Skill> skills,
             ParticipationType participationType,
             String introduction,
-            String portfolioUrl
+            String portfolioUrl,
+            Boolean profileCompleted
     ) {
         this.id = id;
         this.email = email;
@@ -94,9 +97,30 @@ public class User {
         this.name = name;
         this.role = role;
         this.profileImageUrl = profileImageUrl;
-        this.techTags = techTags;
+        this.skills = skills == null ? new ArrayList<>() : skills;
         this.participationType = participationType;
         this.introduction = introduction;
         this.portfolioUrl = portfolioUrl;
+        this.profileCompleted = profileCompleted;
+    }
+
+    public void profileOnboarding(
+            String profileImageUrl,
+            String role,
+            List<SkillTag> skillTags,
+            ParticipationType participationType,
+            String introduction,
+            String portfolioUrl
+    ) {
+        this.profileImageUrl = profileImageUrl;
+        this.role = role;
+        this.skills.clear();
+        skillTags.stream()
+                .map(skillTag -> Skill.of(this, skillTag))
+                .forEach(this.skills::add);
+        this.participationType = participationType;
+        this.introduction = introduction;
+        this.portfolioUrl = portfolioUrl;
+        this.profileCompleted = true;
     }
 }
