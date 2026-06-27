@@ -1,6 +1,7 @@
 package com.brace.server.global.apiPayload;
 
 import com.brace.server.global.code.BaseErrorCode;
+import com.brace.server.global.code.BaseSuccessCode;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
@@ -26,8 +27,8 @@ public class ApiResponse<T> {
         return new ApiResponse<>(true, null, "성공적으로 요청을 처리했습니다.", result);
     }
 
-    public static <T> ApiResponse<T> success(BaseErrorCode errorCode, T result) {
-        return new ApiResponse<>(true, errorCode.getErrorCode(), errorCode.getMessage(), result);
+    public static <T> ApiResponse<T> success(BaseSuccessCode successCode, T result) {
+        return new ApiResponse<>(true, successCode.getCode(), successCode.getMessage(), result);
     }
 
     public static <T> ApiResponse<T> error(BaseErrorCode errorCode, T result) {
