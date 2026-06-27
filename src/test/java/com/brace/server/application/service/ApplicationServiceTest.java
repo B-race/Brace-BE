@@ -9,6 +9,7 @@ import com.brace.server.application.dto.ApplicationResDto.ApplicationSlice;
 import com.brace.server.application.entity.Application;
 import com.brace.server.application.entity.ApplicationStatus;
 import com.brace.server.application.repository.ApplicationRepository;
+import com.brace.server.auth.security.CustomUserDetails;
 import com.brace.server.global.code.ApplicationErrorCode;
 import com.brace.server.global.exception.ProjectException;
 import com.brace.server.notification.entity.Notification;
@@ -81,6 +82,7 @@ class ApplicationServiceTest {
         assertThat(application.getRole().getId()).isEqualTo(fixture.role.getId());
         assertThat(notifications).hasSize(1);
         assertThat(notifications.getFirst().getType()).isEqualTo(NotificationType.NEW_APPLICANT);
+        assertThat(notifications.getFirst().getContent()).isEqualTo("프로젝트에 새로운 지원자가 있습니다.");
         assertThat(notifications.getFirst().getUser().getId()).isEqualTo(fixture.owner.getId());
         assertThat(notifications.getFirst().getApplication().getId()).isEqualTo(response.applicationId());
     }
@@ -162,7 +164,10 @@ class ApplicationServiceTest {
     @DisplayName("create application rejects missing user")
     void createApplicationRejectsMissingUser() {
         ProjectFixture fixture = saveProjectFixture(1, ProjectStatus.RECRUITING, LocalDate.now().plusDays(1));
-        authenticate(Long.MAX_VALUE);
+        User deletedUser = saveUser(999L);
+        userRepository.delete(deletedUser);
+        flushAndClear();
+        authenticate(deletedUser);
 
         assertProjectException(
                 () -> applicationService.createApplication(fixture.project.getId(), new Message("backend", "지원합니다.")),
@@ -278,7 +283,7 @@ class ApplicationServiceTest {
     @Test
     @DisplayName("get applications rejects missing project")
     void getApplicationsRejectsMissingProject() {
-        authenticate(Long.MAX_VALUE);
+        authenticate(saveUser(999L));
 
         assertProjectException(
                 () -> applicationService.getApplications(999L, null, 10),
@@ -317,7 +322,7 @@ class ApplicationServiceTest {
     @Test
     @DisplayName("cancel application rejects missing application")
     void cancelApplicationRejectsMissingApplication() {
-        authenticate(Long.MAX_VALUE);
+        authenticate(saveUser(999L));
 
         assertProjectException(
                 () -> applicationService.cancelApplication(999L),
@@ -369,8 +374,11 @@ class ApplicationServiceTest {
         assertThat(response.applicantEmail()).isEqualTo("user2@example.com");
         assertThat(updatedApplication.getStatus()).isEqualTo(ApplicationStatus.PASS);
         assertThat(projectRoleRepository.findById(fixture.projectRole.getId()).orElseThrow().getRecruitCount()).isEqualTo(1);
-        assertThat(notificationRepository.findAll()).extracting(Notification::getType)
-                .containsExactly(NotificationType.APPLICATION_RESULT);
+        List<Notification> notifications = notificationRepository.findAll();
+        assertThat(notifications).extracting(Notification::getType).containsExactly(NotificationType.APPLICATION_RESULT);
+        assertThat(notifications.getFirst().getContent()).isEqualTo("프로젝트 지원이 수락되었습니다.");
+        assertThat(notifications.getFirst().getUser().getId()).isEqualTo(fixture.applicant.getId());
+        assertThat(notifications.getFirst().getApplication().getId()).isEqualTo(application.getId());
     }
 
     @Test
@@ -389,8 +397,11 @@ class ApplicationServiceTest {
         assertThat(response.applicantEmail()).isNull();
         assertThat(updatedApplication.getStatus()).isEqualTo(ApplicationStatus.FAIL);
         assertThat(projectRoleRepository.findById(fixture.projectRole.getId()).orElseThrow().getRecruitCount()).isEqualTo(2);
-        assertThat(notificationRepository.findAll()).extracting(Notification::getType)
-                .containsExactly(NotificationType.APPLICATION_RESULT);
+        List<Notification> notifications = notificationRepository.findAll();
+        assertThat(notifications).extracting(Notification::getType).containsExactly(NotificationType.APPLICATION_RESULT);
+        assertThat(notifications.getFirst().getContent()).isEqualTo("프로젝트 지원이 거절되었습니다.");
+        assertThat(notifications.getFirst().getUser().getId()).isEqualTo(fixture.applicant.getId());
+        assertThat(notifications.getFirst().getApplication().getId()).isEqualTo(application.getId());
     }
 
     @Test
@@ -409,7 +420,7 @@ class ApplicationServiceTest {
     @Test
     @DisplayName("update application rejects missing application")
     void updateApplicationRejectsMissingApplication() {
-        authenticate(Long.MAX_VALUE);
+        authenticate(saveUser(999L));
 
         assertProjectException(
                 () -> applicationService.updateApplication(999L, new Status("PASS")),
@@ -466,6 +477,8 @@ class ApplicationServiceTest {
         assertThat(notificationRepository.findAll()).hasSize(2);
         assertThat(notificationRepository.findAll()).extracting(notification -> notification.getUser().getId())
                 .containsExactlyInAnyOrder(fixture.applicant.getId(), remaining.getUser().getId());
+        assertThat(notificationRepository.findAll()).extracting(Notification::getContent)
+                .containsExactlyInAnyOrder("프로젝트 지원이 수락되었습니다.", "프로젝트 지원이 거절되었습니다.");
     }
 
     @Test
@@ -569,12 +582,8 @@ class ApplicationServiceTest {
     }
 
     private void authenticate(User user) {
-        authenticate(user.getId());
-    }
-
-    private void authenticate(Long userId) {
         SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(String.valueOf(userId), null, List.of())
+                new UsernamePasswordAuthenticationToken(new CustomUserDetails(user), null, List.of())
         );
     }
 

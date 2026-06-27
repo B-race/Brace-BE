@@ -166,6 +166,113 @@ class ApplicationRepositoryTest {
         assertThat(result).extracting(Application::getId).containsExactly(remaining.getId());
     }
 
+    @Test
+    @DisplayName("find by user id and status filters by user and status")
+    void findByUserIdAndStatusFiltersByUserAndStatus() {
+        ProjectFixture fixture = saveProjectFixture();
+        Application progress = saveApplication(fixture.applicant, fixture.project, fixture.role, "progress");
+        Application failed = saveApplication(saveUser(3L), fixture.project, fixture.role, "failed");
+        failed.fail();
+        saveApplication(saveUser(4L), fixture.project, fixture.role, "other user");
+        flushAndClear();
+
+        org.springframework.data.domain.Page<Application> result = applicationRepository.findByUserIdAndStatus(
+                fixture.applicant.getId(),
+                ApplicationStatus.PROGRESS,
+                PageRequest.of(0, 10)
+        );
+
+        assertThat(result.getContent()).extracting(Application::getId).containsExactly(progress.getId());
+    }
+
+    @Test
+    @DisplayName("find by user id and status returns all statuses when status is null")
+    void findByUserIdAndStatusReturnsAllStatusesWhenStatusIsNull() {
+        ProjectFixture fixture = saveProjectFixture();
+        Application progress = saveApplication(fixture.applicant, fixture.project, fixture.role, "progress");
+        Project otherProject = saveOtherProject(fixture.owner);
+        Application failed = saveApplication(fixture.applicant, otherProject, fixture.role, "failed");
+        failed.fail();
+        flushAndClear();
+
+        org.springframework.data.domain.Page<Application> result = applicationRepository.findByUserIdAndStatus(
+                fixture.applicant.getId(),
+                null,
+                PageRequest.of(0, 10)
+        );
+
+        assertThat(result.getContent()).extracting(Application::getId)
+                .containsExactly(failed.getId(), progress.getId());
+    }
+
+    @Test
+    @DisplayName("count by project id and status groups by role")
+    void countByProjectIdAndStatusGroupsByRole() {
+        ProjectFixture fixture = saveProjectFixture();
+        Role frontend = roleRepository.save(Role.builder().id(20L).name("frontend").build());
+        projectRoleRepository.save(ProjectRole.builder().project(fixture.project).role(frontend).recruitCount(2).build());
+        Application backendPass = saveApplication(fixture.applicant, fixture.project, fixture.role, "backend pass");
+        backendPass.pass();
+        Application frontendPass = saveApplication(saveUser(3L), fixture.project, frontend, "frontend pass");
+        frontendPass.pass();
+        Application frontendProgress = saveApplication(saveUser(4L), fixture.project, frontend, "frontend progress");
+        flushAndClear();
+
+        List<Object[]> result = applicationRepository.countByProjectIdAndStatusGroupByRole(
+                fixture.project.getId(),
+                ApplicationStatus.PASS
+        );
+
+        assertThat(result).extracting(row -> row[0]).containsExactlyInAnyOrder(fixture.role.getId(), frontend.getId());
+        assertThat(result).extracting(row -> row[1]).containsExactlyInAnyOrder(1L, 1L);
+        assertThat(frontendProgress.getStatus()).isEqualTo(ApplicationStatus.PROGRESS);
+    }
+
+    @Test
+    @DisplayName("count by user id counts only target user's applications")
+    void countByUserIdCountsOnlyTargetUsersApplications() {
+        ProjectFixture fixture = saveProjectFixture();
+        saveApplication(fixture.applicant, fixture.project, fixture.role, "target");
+        saveApplication(saveUser(3L), fixture.project, fixture.role, "other");
+        flushAndClear();
+
+        Integer count = applicationRepository.countByUser_Id(fixture.applicant.getId());
+
+        assertThat(count).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("delete by user id deletes only target user's applications")
+    void deleteByUserIdDeletesOnlyTargetUsersApplications() {
+        ProjectFixture fixture = saveProjectFixture();
+        Application target = saveApplication(fixture.applicant, fixture.project, fixture.role, "target");
+        Application other = saveApplication(saveUser(3L), fixture.project, fixture.role, "other");
+        flushAndClear();
+
+        applicationRepository.deleteByUser_Id(fixture.applicant.getId());
+        flushAndClear();
+
+        assertThat(applicationRepository.findById(target.getId())).isEmpty();
+        assertThat(applicationRepository.findById(other.getId())).isPresent();
+    }
+
+    @Test
+    @DisplayName("delete by project owner id deletes applications on owner's projects")
+    void deleteByProjectOwnerIdDeletesApplicationsOnOwnersProjects() {
+        ProjectFixture fixture = saveProjectFixture();
+        Application ownedProjectApplication = saveApplication(fixture.applicant, fixture.project, fixture.role, "owned project");
+        User otherOwner = saveUser(9L);
+        Project otherProject = saveOtherProject(otherOwner);
+        Application otherProjectApplication = saveApplication(saveUser(3L), otherProject, fixture.role, "other project");
+        flushAndClear();
+
+        applicationRepository.deleteByProject_User_Id(fixture.owner.getId());
+        flushAndClear();
+
+        assertThat(applicationRepository.findById(ownedProjectApplication.getId())).isEmpty();
+        assertThat(applicationRepository.findById(otherProjectApplication.getId())).isPresent();
+    }
+
     private ProjectFixture saveProjectFixture() {
         User owner = saveUser(1L);
         User applicant = saveUser(2L);

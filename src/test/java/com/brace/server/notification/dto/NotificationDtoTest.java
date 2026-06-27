@@ -58,7 +58,10 @@ class NotificationDtoTest {
         assertThat(response.hasNext()).isTrue();
         assertThat(response.nextCursorId()).isEqualTo(second.getId());
         assertThat(response.content()).extracting("id").containsExactly(third.getId(), second.getId());
+        assertThat(response.content()).extracting("type").containsExactly("SYSTEM", "SYSTEM");
         assertThat(response.content()).extracting("content").containsExactly("세 번째", "두 번째");
+        assertThat(response.content()).extracting("isRead").containsExactly(false, false);
+        assertThat(response.content()).extracting("applicationId").containsExactly(null, null);
     }
 
     @Test
