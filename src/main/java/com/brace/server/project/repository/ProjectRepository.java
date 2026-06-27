@@ -13,6 +13,8 @@ public interface ProjectRepository extends JpaRepository<Project, Long>, JpaSpec
     Optional<Project> findByIdAndDeletedAtIsNull(Long id);
 
     Integer countByUser_Id(Long userId);
+
+    void deleteByUser_Id(Long userId);
   
     @Query("""
             select p

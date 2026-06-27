@@ -76,4 +76,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
             @Param("status") ApplicationStatus status);
 
     Integer countByUser_Id(Long userId);
+
+    void deleteByUser_Id(Long userId);
+
+    void deleteByProject_User_Id(Long userId);
 }
