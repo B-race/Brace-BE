@@ -7,10 +7,7 @@ import com.brace.server.global.config.JpaAuditingConfig;
 import com.brace.server.project.entity.*;
 import com.brace.server.project.repository.ProjectRepository;
 import com.brace.server.project.repository.ProjectRoleRepository;
-import com.brace.server.user.entity.ParticipationType;
-import com.brace.server.user.entity.Role;
-import com.brace.server.user.entity.SocialProvider;
-import com.brace.server.user.entity.User;
+import com.brace.server.user.entity.*;
 import com.brace.server.user.repository.RoleRepository;
 import com.brace.server.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;
@@ -58,7 +55,7 @@ class ApplicationRepositoryTest {
         Application first = saveApplication(fixture.applicant, fixture.project, fixture.role, "1");
         Application second = saveApplication(saveUser(3L), fixture.project, fixture.role, "2");
         Application third = saveApplication(saveUser(4L), fixture.project, fixture.role, "3");
-        saveApplication(saveUser(5L), saveOtherProject(2L, fixture.owner), fixture.role, "other");
+        saveApplication(saveUser(5L), saveOtherProject(fixture.owner), fixture.role, "other");
         flushAndClear();
 
         List<Application> result = applicationRepository.findByProjectIdWithCursor(
@@ -153,9 +150,9 @@ class ApplicationRepositoryTest {
         Application remaining = saveApplication(saveUser(3L), fixture.project, fixture.role, "remaining");
         Application failed = saveApplication(saveUser(4L), fixture.project, fixture.role, "failed");
         failed.fail();
-        saveApplication(saveUser(5L), saveOtherProject(2L, fixture.owner), fixture.role, "other project");
+        saveApplication(saveUser(5L), saveOtherProject(fixture.owner), fixture.role, "other project");
         Role otherRole = roleRepository.save(Role.builder().id(20L).name("frontend").build());
-        projectRoleRepository.save(ProjectRole.builder().id(20L).project(fixture.project).role(otherRole).recruitCount(1).build());
+        projectRoleRepository.save(ProjectRole.builder().project(fixture.project).role(otherRole).recruitCount(1).build());
         saveApplication(saveUser(6L), fixture.project, otherRole, "other role");
         flushAndClear();
 
@@ -174,7 +171,6 @@ class ApplicationRepositoryTest {
         User applicant = saveUser(2L);
         Role role = roleRepository.save(Role.builder().id(10L).name("backend").build());
         Project project = projectRepository.save(Project.builder()
-                .id(1L)
                 .activityType(ActivityType.PERSONAL_PROJECT)
                 .title("프로젝트")
                 .description("설명")
@@ -189,7 +185,6 @@ class ApplicationRepositoryTest {
                 .user(owner)
                 .build());
         projectRoleRepository.save(ProjectRole.builder()
-                .id(10L)
                 .project(project)
                 .role(role)
                 .recruitCount(3)
@@ -197,9 +192,8 @@ class ApplicationRepositoryTest {
         return new ProjectFixture(owner, applicant, role, project);
     }
 
-    private Project saveOtherProject(Long projectId, User owner) {
+    private Project saveOtherProject(User owner) {
         return projectRepository.save(Project.builder()
-                .id(projectId)
                 .activityType(ActivityType.PERSONAL_PROJECT)
                 .title("다른 프로젝트")
                 .description("설명")
@@ -225,20 +219,31 @@ class ApplicationRepositoryTest {
     }
 
     private User saveUser(Long id) {
-        return userRepository.findById(id).orElseGet(() -> userRepository.save(User.builder()
-                .id(id)
-                .email("user" + id + "@example.com")
-                .password("password")
-                .socialProvider(SocialProvider.NONE)
-                .socialId("social-" + id)
-                .name("user" + id)
-                .role("개발자")
-                .profileImageUrl("https://example.com/" + id + ".png")
-                .techTags("java,spring")
-                .participationType(ParticipationType.BOTH)
-                .introduction("소개")
-                .portfolioUrl("https://example.com/portfolio/" + id)
-                .build()));
+        String email = "user" + id + "@example.com";
+        return userRepository.findByEmail(email).orElseGet(() -> {
+            User user = User.builder()
+                    .email(email)
+                    .password("password")
+                    .socialProvider(SocialProvider.NONE)
+                    .socialId("social-" + id)
+                    .name("user" + id)
+                    .role("개발자")
+                    .profileImageUrl("https://example.com/" + id + ".png")
+                    .participationType(ParticipationType.BOTH)
+                    .introduction("소개")
+                    .portfolioUrl("https://example.com/portfolio/" + id)
+                    .profileCompleted(true)
+                    .build();
+            user.profileOnboarding(
+                    "https://example.com/" + id + ".png",
+                    "개발자",
+                    List.of(SkillTag.JAVA, SkillTag.SPRING),
+                    ParticipationType.BOTH,
+                    "소개",
+                    "https://example.com/portfolio/" + id
+            );
+            return userRepository.save(user);
+        });
     }
 
     private void flushAndClear() {
