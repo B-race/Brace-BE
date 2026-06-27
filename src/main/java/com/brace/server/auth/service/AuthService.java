@@ -7,6 +7,8 @@ import com.brace.server.auth.exception.code.AuthErrorCode;
 import com.brace.server.auth.jwt.JwtTokenProvider;
 import com.brace.server.auth.oauth.GoogleTokenVerifier;
 import com.brace.server.auth.oauth.GoogleUserInfo;
+import com.brace.server.auth.oauth.NaverOAuthClient;
+import com.brace.server.auth.oauth.NaverUserInfo;
 import com.brace.server.auth.repository.RefreshTokenRepository;
 import com.brace.server.global.exception.ProjectException;
 import com.brace.server.user.entity.ParticipationType;
@@ -32,6 +34,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final GoogleTokenVerifier googleTokenVerifier;
+    private final NaverOAuthClient naverOAuthClient;
 
     @Transactional
     public AuthResDTO.signUp signUp(AuthReqDTO.signUp dto) {
@@ -160,6 +163,49 @@ public class AuthService {
                 .name(googleUserInfo.name().isBlank() ? googleUserInfo.email() : googleUserInfo.name())
                 .role("")
                 .profileImageUrl(googleUserInfo.profileImageUrl())
+                .participationType(ParticipationType.BOTH)
+                .profileCompleted(false)
+                .build();
+
+        return userRepository.save(user);
+    }
+
+    @Transactional
+    public AuthResDTO.naverLogin naverLogin(AuthReqDTO.naverLogin dto) {
+        NaverUserInfo naverUserInfo = naverOAuthClient.getUserInfo(dto.code(), dto.state());
+        User user = userRepository.findBySocialProviderAndSocialIdAndDeletedAtIsNull(
+                        SocialProvider.NAVER,
+                        naverUserInfo.socialId()
+                )
+                .orElseGet(() -> createNaverUser(naverUserInfo));
+
+        String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail(), user.getRole());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId(), user.getEmail(), user.getRole());
+        saveRefreshToken(user, refreshToken);
+
+        return AuthResDTO.naverLogin.builder()
+                .userId(user.getId())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .profileCompleted(user.getProfileCompleted())
+                .build();
+    }
+
+    private User createNaverUser(NaverUserInfo naverUserInfo) {
+        userRepository.findByEmailAndDeletedAtIsNull(naverUserInfo.email())
+                .ifPresent(user -> {
+                    throw new ProjectException(AuthErrorCode.ALREADY_EXISTS_EMAIL);
+                });
+
+        User user = User.builder()
+                .email(naverUserInfo.email())
+                .password(passwordEncoder.encode("NAVER:" + naverUserInfo.socialId()))
+                .socialProvider(SocialProvider.NAVER)
+                .socialId(naverUserInfo.socialId())
+                .name(naverUserInfo.name().isBlank() ? naverUserInfo.email() : naverUserInfo.name())
+                .role("")
+                .profileImageUrl(naverUserInfo.profileImageUrl())
                 .participationType(ParticipationType.BOTH)
                 .profileCompleted(false)
                 .build();

@@ -21,6 +21,10 @@ public enum AuthSuccessCode implements BaseSuccessCode {
             "AUTH200_3",
             "구글 로그인에 성공했습니다."),
 
+    SUCCESS_NAVER_LOGIN(HttpStatus.OK,
+            "AUTH200_5",
+            "네이버 로그인에 성공했습니다."),
+
     SUCCESS_REISSUE(HttpStatus.OK,
             "AUTH200_2",
             "토큰 재발급에 성공했습니다."),
