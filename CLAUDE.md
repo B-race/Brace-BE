@@ -13,6 +13,7 @@
 - Do not run destructive commands.
 - Do not run deployment, release, migration, or credential-related commands unless explicitly requested.
 - Do not install, update, remove, or replace dependencies without explicit user confirmation.
+- If a command fails due to missing execute permission or insufficient permission, do not bypass it with an alternate invocation unless the user explicitly asks you to.
 
 ## Dependency Rules
 
