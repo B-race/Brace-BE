@@ -19,18 +19,33 @@ public class JwtTokenProvider {
 
     private final String secret;
     private final long accessTokenExpirationMillis;
+    private final long refreshTokenExpirationMillis;
 
     public JwtTokenProvider(
             @Value("${jwt.secret:brace-local-development-secret-key-change-me}") String secret,
-            @Value("${jwt.access-token-expiration-millis:7200000}") long accessTokenExpirationMillis
+            @Value("${jwt.access-token-expiration-millis:7200000}") long accessTokenExpirationMillis,
+            @Value("${jwt.refresh-token-expiration-millis:1209600000}") long refreshTokenExpirationMillis
     ) {
         this.secret = secret;
         this.accessTokenExpirationMillis = accessTokenExpirationMillis;
+        this.refreshTokenExpirationMillis = refreshTokenExpirationMillis;
     }
 
     public String createAccessToken(Long userId, String email, String role) {
+        return createToken(userId, email, role, accessTokenExpirationMillis);
+    }
+
+    public String createRefreshToken(Long userId, String email, String role) {
+        return createToken(userId, email, role, refreshTokenExpirationMillis);
+    }
+
+    public long getRefreshTokenExpirationMillis() {
+        return refreshTokenExpirationMillis;
+    }
+
+    private String createToken(Long userId, String email, String role, long expirationMillis) {
         long now = Instant.now().toEpochMilli();
-        long expiresAt = now + accessTokenExpirationMillis;
+        long expiresAt = now + expirationMillis;
 
         String header = encode("{\"alg\":\"HS256\",\"typ\":\"JWT\"}");
         String payload = encode("""

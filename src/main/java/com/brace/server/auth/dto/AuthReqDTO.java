@@ -28,4 +28,8 @@ public class AuthReqDTO {
             @NotBlank
             String password
     ) {}
+
+    public record logout(
+            String refreshToken
+    ) {}
 }
