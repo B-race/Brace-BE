@@ -1,0 +1,16 @@
+.git
+.github
+.gradle
+build
+out
+.idea
+.vscode
+*.iml
+.DS_Store
+README.md
+*.log
+*.tmp
+.env
+.env.*
+tmp
+temp
