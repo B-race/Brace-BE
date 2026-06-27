@@ -1,15 +1,7 @@
 package com.brace.server.project.entity;
 
 import com.brace.server.user.entity.Role;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -48,5 +40,9 @@ public class ProjectRole {
         this.recruitCount = recruitCount;
         this.project = project;
         this.role = role;
+    }
+
+    public boolean hasRecruitCount() {
+        return recruitCount > 0;
     }
 }
