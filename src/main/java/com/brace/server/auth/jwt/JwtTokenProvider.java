@@ -49,7 +49,7 @@ public class JwtTokenProvider {
 
         String header = encode("{\"alg\":\"HS256\",\"typ\":\"JWT\"}");
         String payload = encode("""
-                {"sub":"%s","email":"%s","role":"%s","iat":%d,"exp":%d}
+                {"sub":%s,"email":"%s","role":"%s","iat":%d,"exp":%d}
                 """.formatted(userId, escape(email), escape(role), now / 1000, expiresAt / 1000).trim());
         String unsignedToken = header + "." + payload;
 
@@ -61,8 +61,7 @@ public class JwtTokenProvider {
 
         try {
             String payload = decodePayload(token);
-            String subject = extractStringClaim(payload, "sub");
-            return Long.valueOf(subject);
+            return extractLongClaim(payload, "sub");
         } catch (Exception e) {
             throw new ProjectException(AuthErrorCode.INVALID_TOKEN);
         }

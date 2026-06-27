@@ -69,6 +69,20 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     );
 
 
+    @Query("""
+            select a from Application a
+            join fetch a.project
+            join fetch a.role
+            where a.user.id = :userId
+            and (:status is null or a.status = :status)
+            order by a.createdAt desc
+            """)
+    org.springframework.data.domain.Page<Application> findByUserIdAndStatus(
+            @Param("userId") Long userId,
+            @Param("status") ApplicationStatus status,
+            Pageable pageable
+    );
+
     @Query("SELECT a.role.id, COUNT(a) FROM Application a WHERE a.project.id = :projectId " +
             "AND a.status = :status GROUP BY a.role.id")
     List<Object[]> countByProjectIdAndStatusGroupByRole(

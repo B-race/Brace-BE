@@ -43,6 +43,7 @@ public class AuthService {
                 .socialId("")
                 .name(dto.name())
                 .role("")
+                .profileImageUrl("")
                 .participationType(ParticipationType.BOTH)
                 .profileCompleted(false)
                 .build();
