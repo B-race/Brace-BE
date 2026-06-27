@@ -4,6 +4,8 @@ import com.brace.server.global.apiPayload.ApiResponse;
 import com.brace.server.global.code.BaseErrorCode;
 import com.brace.server.global.code.GeneralErrorCode;
 import com.brace.server.global.exception.ProjectException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -26,6 +28,19 @@ public class GlobalExceptionAdvice {
                 .stream()
                 .findFirst()
                 .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                .orElse(GeneralErrorCode.BAD_REQUEST.getMessage());
+
+        BaseErrorCode errorCode = GeneralErrorCode.BAD_REQUEST;
+        return ResponseEntity.status(errorCode.getHttpStatus())
+                .body(new ApiResponse<>(false, errorCode.getErrorCode(), message, null));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<String>> handleConstraintViolationException(ConstraintViolationException e) {
+        String message = e.getConstraintViolations()
+                .stream()
+                .findFirst()
+                .map(ConstraintViolation::getMessage)
                 .orElse(GeneralErrorCode.BAD_REQUEST.getMessage());
 
         BaseErrorCode errorCode = GeneralErrorCode.BAD_REQUEST;

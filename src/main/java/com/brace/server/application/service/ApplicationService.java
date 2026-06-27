@@ -12,7 +12,7 @@ import com.brace.server.application.entity.ApplicationStatus;
 import com.brace.server.application.repository.ApplicationRepository;
 import com.brace.server.global.code.ApplicationErrorCode;
 import com.brace.server.global.exception.ProjectException;
-import com.brace.server.global.security.FakeCurrentUserProvider;
+import com.brace.server.global.security.SecurityUtil;
 import com.brace.server.notification.entity.Notification;
 import com.brace.server.notification.entity.NotificationType;
 import com.brace.server.notification.repository.NotificationRepository;
@@ -41,11 +41,10 @@ public class ApplicationService {
     private final ProjectRoleRepository projectRoleRepository;
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
-    private final FakeCurrentUserProvider currentUserProvider;
 
     @Transactional
     public ApplicationId createApplication(Long projectId, Message request) {
-        Long applicantId = currentUserProvider.getCurrentUserId();
+        Long applicantId = SecurityUtil.getCurrentUserId();
 
         // 지원할 프로젝트 역할과 프로젝트를 함께 조회한다.
         ProjectRole projectRole = projectRoleRepository.findByProjectIdAndRoleName(projectId, request.role())
@@ -99,7 +98,7 @@ public class ApplicationService {
     }
 
     public ApplicationSlice getApplications(Long projectId, Long cursorId, Integer size) {
-        Long currentUserId = currentUserProvider.getCurrentUserId();
+        Long currentUserId = SecurityUtil.getCurrentUserId();
 
         // 지원자 목록은 프로젝트 작성자만 조회할 수 있다.
         if (size == null || size < 1) {
@@ -133,7 +132,7 @@ public class ApplicationService {
 
     @Transactional
     public ApplicationResDto.ApplicationStatus cancelApplication(Long applicationId) {
-        Long applicantId = currentUserProvider.getCurrentUserId();
+        Long applicantId = SecurityUtil.getCurrentUserId();
 
         // 지원자 본인의 진행 중 지원만 취소할 수 있다.
         Application application = applicationRepository.findByIdWithUser(applicationId)
@@ -152,7 +151,7 @@ public class ApplicationService {
 
     @Transactional
     public ApplicationResult updateApplication(Long applicationId, Status request) {
-        Long projectOwnerId = currentUserProvider.getCurrentUserId();
+        Long projectOwnerId = SecurityUtil.getCurrentUserId();
         ApplicationStatus targetStatus = request.toApplicationStatus();
 
         // 프로젝트 작성자만 진행 중인 지원을 합격 또는 불합격 처리할 수 있다.

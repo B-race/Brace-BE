@@ -57,10 +57,14 @@ class ApplicationResDtoTest {
         assertThat(summary.projectStatus()).isEqualTo("RECRUITING");
         assertThat(summary.status()).isEqualTo("PROGRESS");
         assertThat(summary.applicant().userId()).isEqualTo(2L);
+        assertThat(summary.applicant().name()).isEqualTo("user2");
         assertThat(summary.applicant().roleId()).isEqualTo(10L);
         assertThat(summary.applicant().roleName()).isEqualTo("backend");
         assertThat(summary.applicant().list()).containsExactly(SkillTag.JAVA, SkillTag.SPRING);
         assertThat(summary.applicant().message()).isEqualTo("지원합니다.");
+        assertThat(summary.applicant().portfolioUrl()).isEqualTo("https://example.com/portfolio/2");
+        assertThat(summary.applicant().profileImageUrl()).isEqualTo("https://example.com/2.png");
+        assertThat(summary.applicant().introduction()).isEqualTo("소개");
     }
 
     private User user(Long id) {
