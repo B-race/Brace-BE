@@ -2,11 +2,8 @@ package com.brace.server.user.dto;
 
 import com.brace.server.user.entity.ParticipationType;
 import com.brace.server.user.entity.SkillTag;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
+
 import java.util.List;
 
 public class UserReqDTO {
@@ -22,7 +19,7 @@ public class UserReqDTO {
 
             @NotEmpty
             @Size(max = 15)
-            List<@NotNull SkillTag> techTags,
+            List<@NotNull SkillTag> skillTags,
 
             @NotNull
             ParticipationType participationType,

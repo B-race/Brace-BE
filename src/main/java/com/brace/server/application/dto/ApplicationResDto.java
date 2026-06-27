@@ -2,6 +2,8 @@ package com.brace.server.application.dto;
 
 import com.brace.server.application.entity.Application;
 import com.brace.server.project.entity.Project;
+import com.brace.server.user.entity.Skill;
+import com.brace.server.user.entity.SkillTag;
 import com.brace.server.user.entity.User;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -65,7 +67,7 @@ public class ApplicationResDto {
             Long roleId,
             String name,
             String roleName,
-            String techTags,
+            List<SkillTag> list,
             String message,
             String portfolioUrl,
             String profileImageUrl,
@@ -79,7 +81,9 @@ public class ApplicationResDto {
                     application.getRole().getId(),
                     applicant.getName(),
                     application.getRole().getName(),
-                    applicant.getTechTags(),
+                    applicant.getSkills().stream()
+                            .map(Skill::getSkillTag)
+                            .toList(),
                     application.getMessage(),
                     applicant.getPortfolioUrl(),
                     applicant.getProfileImageUrl(),

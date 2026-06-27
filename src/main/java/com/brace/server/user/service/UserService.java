@@ -7,7 +7,6 @@ import com.brace.server.user.dto.UserResDTO;
 import com.brace.server.user.entity.User;
 import com.brace.server.user.exception.code.UserErrorCode;
 import com.brace.server.user.repository.UserRepository;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +29,7 @@ public class UserService {
         user.profileOnboarding(
                 dto.profileImg(),
                 dto.role(),
-                dto.techTags(),
+                dto.skillTags(),
                 dto.participationType(),
                 dto.introduction(),
                 dto.portfolioUrl()
