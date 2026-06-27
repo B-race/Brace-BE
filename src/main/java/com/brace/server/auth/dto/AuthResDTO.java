@@ -32,4 +32,13 @@ public class AuthResDTO {
             String refreshToken,
             String tokenType
     ) {}
+
+    @Builder
+    public record googleLogin(
+            Long userId,
+            String accessToken,
+            String refreshToken,
+            String tokenType,
+            Boolean profileCompleted
+    ) {}
 }

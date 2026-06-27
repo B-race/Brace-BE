@@ -35,6 +35,14 @@ public class AuthController {
         return ApiResponse.success(code, authService.login(dto));
     }
 
+    @PostMapping("/auth/google/login")
+    public ApiResponse<AuthResDTO.googleLogin> googleLogin(
+            @Valid @RequestBody AuthReqDTO.googleLogin dto
+    ) {
+        BaseSuccessCode code = AuthSuccessCode.SUCCESS_GOOGLE_LOGIN;
+        return ApiResponse.success(code, authService.googleLogin(dto));
+    }
+
     @PostMapping("/auth/reissue")
     public ApiResponse<AuthResDTO.reissue> reissue(
             @Valid @RequestBody AuthReqDTO.reissue dto

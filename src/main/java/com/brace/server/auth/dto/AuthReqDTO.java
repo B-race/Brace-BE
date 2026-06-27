@@ -37,4 +37,9 @@ public class AuthReqDTO {
             @NotBlank
             String refreshToken
     ) {}
+
+    public record googleLogin(
+            @NotBlank
+            String idToken
+    ) {}
 }

@@ -16,3 +16,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+google:
+  oauth:
+    client-id: ${GOOGLE_CLIENT_ID:}
