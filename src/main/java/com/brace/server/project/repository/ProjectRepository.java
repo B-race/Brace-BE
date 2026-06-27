@@ -8,4 +8,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 public interface ProjectRepository extends JpaRepository<Project, Long>, JpaSpecificationExecutor<Project> {
 
     Optional<Project> findByIdAndDeletedAtIsNull(Long id);
+
+    Integer countByUser_Id(Long userId);
 }

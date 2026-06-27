@@ -14,4 +14,6 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     List<Object[]> countByProjectIdAndStatusGroupByRole(
             @Param("projectId") Long projectId,
             @Param("status") ApplicationStatus status);
+
+    Integer countByUser_Id(Long userId);
 }

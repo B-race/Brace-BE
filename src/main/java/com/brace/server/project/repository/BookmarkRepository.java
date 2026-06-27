@@ -11,4 +11,6 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     boolean existsByUserAndProject(User user, Project project);
 
     Optional<Bookmark> findByUserAndProject(User user, Project project);
+
+    Integer countByUser_Id(Long userId);
 }

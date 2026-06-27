@@ -59,6 +59,12 @@ public class User {
     @Column(name = "portfolio_url", length = 500)
     private String portfolioUrl;
 
+    @Column(name = "github_url", length = 500)
+    private String githubUrl;
+
+    @Column(name = "extra_url", length = 500)
+    private String extraUrl;
+
     @Column(name = "profile_completed", nullable = false)
     private Boolean profileCompleted;
 

@@ -10,6 +10,7 @@ import com.brace.server.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,5 +27,13 @@ public class UserController {
     ) {
         BaseSuccessCode code = UserSuccessCode.SUCCESS_COMPLETE_ONBOARDING;
         return ApiResponse.success(code, userService.profileOnboarding(userDetails.getUserId(), dto));
+    }
+
+    @GetMapping("/users/me")
+    public ApiResponse<UserResDTO.myPage> myPage(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        BaseSuccessCode code = UserSuccessCode.MYPAGE_OK;
+        return ApiResponse.success(code, userService.myPage(userDetails.getUserId()));
     }
 }
