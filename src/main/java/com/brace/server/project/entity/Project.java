@@ -155,6 +155,6 @@ public class Project {
     }
 
     public void incrementViewCount() {
-        this.viewCount++;
+        this.viewCount = (this.viewCount == null) ? 1 : (this.viewCount + 1);
     }
 }

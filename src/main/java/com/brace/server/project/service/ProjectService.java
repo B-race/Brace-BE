@@ -109,6 +109,8 @@ public class ProjectService {
                 request.getTags()
         );
 
+        validateContestFields(project.getActivityType(), project.getProjectName(), project.getProjectUrl());
+
         if (request.getRoles() != null) {
             projectRoleRepository.deleteByProject(project);
             saveProjectRoles(project, request.getRoles());

@@ -57,7 +57,7 @@ public class ProjectSpecification {
                 }
             }
 
-            if ("bookmark_count".equals(sort) && !Boolean.TRUE.equals(query.isDistinct())) {
+            if ("bookmark_count".equals(sort)) {
                 Subquery<Long> bookmarkCount = query.subquery(Long.class);
                 var bookmarkRoot = bookmarkCount.from(Bookmark.class);
                 bookmarkCount.select(cb.count(bookmarkRoot))
