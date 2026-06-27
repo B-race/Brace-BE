@@ -1,9 +1,15 @@
 package com.brace.server.user.service;
 
+import com.brace.server.application.dto.ApplicationSummaryResponse;
+import com.brace.server.application.entity.Application;
+import com.brace.server.application.entity.ApplicationStatus;
 import com.brace.server.application.repository.ApplicationRepository;
 import com.brace.server.auth.exception.code.AuthErrorCode;
 import com.brace.server.auth.repository.RefreshTokenRepository;
 import com.brace.server.global.exception.ProjectException;
+import com.brace.server.project.converter.ProjectConverter;
+import com.brace.server.project.dto.response.PageResponse;
+import com.brace.server.project.dto.response.ProjectSummaryResponse;
 import com.brace.server.project.repository.BookmarkRepository;
 import com.brace.server.project.repository.ProjectRepository;
 import com.brace.server.user.dto.UserReqDTO;
@@ -16,6 +22,8 @@ import com.brace.server.user.repository.UserRepository;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,12 +62,48 @@ public class UserService {
                 .build();
     }
 
+    public PageResponse<ProjectSummaryResponse> getMyProjects(Long userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return new PageResponse<>(
+                projectRepository.findByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(userId, pageable)
+                        .map(ProjectConverter::toSummaryResponse)
+        );
+    }
+
+    public PageResponse<ApplicationSummaryResponse> getMyApplications(Long userId, ApplicationStatus status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return new PageResponse<>(
+                applicationRepository.findByUserIdAndStatus(userId, status, pageable)
+                        .map(this::toApplicationSummaryResponse)
+        );
+    }
+
+    public PageResponse<ProjectSummaryResponse> getMyBookmarks(Long userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return new PageResponse<>(
+                bookmarkRepository.findProjectsByUserId(userId, pageable)
+                        .map(ProjectConverter::toSummaryResponse)
+        );
+    }
+
+    private ApplicationSummaryResponse toApplicationSummaryResponse(Application application) {
+        return ApplicationSummaryResponse.builder()
+                .applicationId(application.getId())
+                .projectId(application.getProject().getId())
+                .projectTitle(application.getProject().getTitle())
+                .activityType(application.getProject().getActivityType())
+                .roleName(application.getRole().getName())
+                .status(application.getStatus())
+                .appliedAt(application.getCreatedAt())
+                .projectStatus(application.getProject().getStatus())
+                .build();
+    }
+
     @Transactional(readOnly = true)
     public UserResDTO.myPage myPage(Long userId) {
         User user = userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(() -> new ProjectException(AuthErrorCode.NOT_FOUND));
 
-        // skills 조회 로직
         List<Skill> userSkills = skillRepository.findByUserId(userId);
 
         List<UserResDTO.myPageSkill> userSkillsDTO = userSkills.stream()
@@ -69,13 +113,8 @@ public class UserService {
                         .build())
                 .toList();
 
-        //등록한 프로젝트 개수 구하기
         Integer registeredProjects = projectRepository.countByUser_Id(userId);
-
-        //지원한 프로젝트 개수 구하기
         Integer appliedProjects = applicationRepository.countByUser_Id(userId);
-
-        //북마크 프로젝트 개수 구하기
         Integer bookmarkedProjects = bookmarkRepository.countByUser_Id(userId);
 
         return UserResDTO.myPage.builder()
