@@ -30,6 +30,7 @@ get_optional_parameter() {
 DB_URL="$(get_required_parameter /brace/prod/DB_URL)"
 DB_USER="$(get_required_parameter /brace/prod/DB_USER)"
 DB_PW="$(get_required_parameter /brace/prod/DB_PW)"
+CORS_ALLOWED_ORIGINS="$(get_required_parameter /brace/prod/CORS_ALLOWED_ORIGINS)"
 GOOGLE_CLIENT_ID="$(get_optional_parameter /brace/prod/GOOGLE_CLIENT_ID)"
 NAVER_CLIENT_ID="$(get_optional_parameter /brace/prod/NAVER_CLIENT_ID)"
 NAVER_CLIENT_SECRET="$(get_optional_parameter /brace/prod/NAVER_CLIENT_SECRET)"
@@ -52,6 +53,7 @@ docker run -d \
   -e DB_URL="$DB_URL" \
   -e DB_USER="$DB_USER" \
   -e DB_PW="$DB_PW" \
+  -e CORS_ALLOWED_ORIGINS="$CORS_ALLOWED_ORIGINS" \
   -e GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" \
   -e NAVER_CLIENT_ID="$NAVER_CLIENT_ID" \
   -e NAVER_CLIENT_SECRET="$NAVER_CLIENT_SECRET" \

@@ -11,12 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Getter
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@Table(
-        name = "project_roles",
-        uniqueConstraints = {
-                @UniqueConstraint(name = "UK_PROJECT_ROLE", columnNames = {"project_id", "role_id"})
-        }
-)
+@Table(name = "project_roles")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ProjectRole {
 
